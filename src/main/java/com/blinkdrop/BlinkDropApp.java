@@ -1,4 +1,5 @@
 package com.blinkdrop;
+
 import java.awt.*;
 import java.io.IOException;
 import javafx.application.Application;
@@ -6,11 +7,10 @@ import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.layout.VBox;
-import javafx.stage.Stage;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 
 public class BlinkDropApp extends Application {
@@ -19,44 +19,41 @@ public class BlinkDropApp extends Application {
     private TrayIcon trayIcon;
     private boolean isRunning = false;
 
-    public static void main(String[] args){
+    public static void main(String[] args) {
         Platform.setImplicitExit(false);
         launch(args);
     }
 
     @Override
-    public void start(Stage primaryStage) throws Exception{
-        // Hiding the main stage as we only want a tray icon
+    public void start(Stage primaryStage) throws Exception {
         setupControlWindow(primaryStage);
-//        primaryStage.hide();
-//        if(SystemTray.isSupported()){
-//            setupTrayIcon();
-//            startReceiverService();
-//        }else{
-//            System.err.println("System tray not supported!");
-//            Platform.exit();
-//        }
+        if (SystemTray.isSupported()) {
+            setupTrayIcon();
+        } else {
+            System.err.println("System tray not supported!");
+            Platform.exit();
+        }
     }
 
     private void setupControlWindow(Stage primaryStage) {
         Label titleLabel = new Label("Welcome to BlinkDrop");
         titleLabel.setStyle("-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #58a6ff;");
 
-        Label subtitleLabel = new Label("Seamless file sharing. Directly from Android to MacOS.");
+        Label subtitleLabel = new Label("Seamless file sharing. Directly from Android to macOS.");
         subtitleLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #c9d1d9;");
 
-        Button toggleButton = new Button("Start Receiving");
+        Button toggleButton = new Button("Start Service");
         toggleButton.setPrefWidth(160);
         toggleButton.setOnAction(event -> {
             if (!isRunning) {
                 startReceiverService();
-                subtitleLabel.setText("Mac is discoverable on wifi network...");
-                toggleButton.setText("Stop Receiving");
+                subtitleLabel.setText("Service is running...");
+                toggleButton.setText("Stop Service");
                 isRunning = true;
             } else {
                 stopReceiverService();
-                subtitleLabel.setText("Receiving stopped.");
-                toggleButton.setText("Start Receiving");
+                subtitleLabel.setText("Service is stopped.");
+                toggleButton.setText("Start Service");
                 isRunning = false;
             }
         });
@@ -72,8 +69,6 @@ public class BlinkDropApp extends Application {
         primaryStage.setTitle("BlinkDrop");
         primaryStage.setScene(scene);
         primaryStage.setResizable(false);
-
-        // Proper exit on window close
         primaryStage.setOnCloseRequest((WindowEvent e) -> {
             stopReceiverService();
             Platform.exit();
@@ -83,13 +78,10 @@ public class BlinkDropApp extends Application {
         primaryStage.show();
     }
 
-
-
     private void setupTrayIcon() throws IOException {
-        // Load icon from resources
         SystemTray tray = SystemTray.getSystemTray();
-//        SystemTray tray = System.getSystemTray();
-        java.awt.Image image = Toolkit.getDefaultToolkit().getImage(getClass().getResource("/icon.png"));
+        Image image = Toolkit.getDefaultToolkit().getImage(getClass().getResource("/icon.png"));
+
         PopupMenu popup = new PopupMenu();
         MenuItem exitItem = new MenuItem("Exit");
         exitItem.addActionListener(e -> {
@@ -100,35 +92,30 @@ public class BlinkDropApp extends Application {
         });
         popup.add(exitItem);
 
-
-        // Create the tray icon
         trayIcon = new TrayIcon(image, "BlinkDrop Receiver", popup);
         trayIcon.setImageAutoSize(true);
         trayIcon.setToolTip("BlinkDrop is running...");
+
         try {
             tray.add(trayIcon);
         } catch (AWTException e) {
             System.err.println("TrayIcon could not be added.");
         }
-
     }
 
-    private void startReceiverService(){
-        Receiver receiverService = new Receiver();
-        Thread receiverThread = new  Thread(()->{
-            try{
-                receiverService.main(new String[0]);
-            }catch (Exception e){
-                e.printStackTrace();
-            }
-        });
-        receiverThread.setDaemon(true);
-        receiverThread.start();
+    private void startReceiverService() {
+        if (receiverService == null) {
+            receiverService = new Receiver(trayIcon);
+            Thread receiverThread = new Thread(() -> receiverService.start());
+            receiverThread.setDaemon(true);
+            receiverThread.start();
+        }
     }
 
-    private void stopReceiverService(){
-        Receiver receiverService = new Receiver();
+    private void stopReceiverService() {
+        if (receiverService != null) {
+            receiverService.stop();
+            receiverService = null;
+        }
     }
-
-
 }
