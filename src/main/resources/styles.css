@@ -1,0 +1,30 @@
+.root {
+    -fx-background-color: #0d1117;
+    -fx-font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.label {
+    -fx-text-fill: #c9d1d9;
+    -fx-font-size: 14px;
+}
+
+.button {
+    -fx-background-color: linear-gradient(to bottom, #1f6feb, #0a3069);
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-padding: 10 20;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(one-pass-box, rgba(0,0,0,0.3), 4, 0.0, 0, 2);
+    -fx-border-color: transparent;
+    -fx-font-weight: bold;
+}
+
+.button:hover {
+    -fx-background-color: linear-gradient(to bottom, #388bfd, #0f4c9a);
+}
+
+.button:pressed {
+    -fx-background-color: #0a3069;
+}
